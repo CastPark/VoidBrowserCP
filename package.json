@@ -1,6 +1,6 @@
 {
   "name": "voidbrowser",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "VoidBrowser – Modern, minimal, dark Electron browser",
   "main": "main.js",
   "scripts": {
