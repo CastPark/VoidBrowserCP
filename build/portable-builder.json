@@ -1,0 +1,20 @@
+{
+  "appId": "com.castpark.voidbrowsercp",
+  "productName": "VoidBrowserCP",
+  "directories": {
+    "output": "release-single"
+  },
+  "files": [
+    "**/*",
+    "!release/**/*",
+    "!release-single/**/*",
+    "!build/iexpress-stage/**/*",
+    "!node_modules/.cache/**/*"
+  ],
+  "win": {
+    "target": [
+      "portable"
+    ],
+    "signAndEditExecutable": false
+  }
+}

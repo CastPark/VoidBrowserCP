@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" />
+  <title>Settings – VoidBrowser</title>
+  <style>
+  /* ── Settings Page Styles ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0d0d0d;
+    --surface:   #141414;
+    --surface2:  #1a1a1a;
+    --surface3:  #1e293b;
+    --border:    #1e293b;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --accent:    #0ea5e9;
+    --accent2:   #06b6d4;
+    --glow:      rgba(14,165,233,0.3);
+    --danger:    #ef4444;
+    --radius:    10px;
+    --tr:        200ms ease;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body { display: flex; }
+
+  /* ── Sidebar nav ──────────────────────────────────────────────── */
+  #sidebar {
+    width: 200px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .settings-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 20px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .settings-logo span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    color: var(--muted);
+    cursor: pointer;
+    transition: background var(--tr), color var(--tr);
+    font-size: 13px;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--surface3); color: var(--text); }
+  .nav-item.active svg { color: var(--accent); }
+
+  /* ── Main area ─────────────────────────────────────────────────── */
+  #main {
+    flex: 1;
+    padding: 32px 40px;
+    max-width: 720px;
+    overflow-y: auto;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 200ms ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+
+  /* Settings groups */
+  .settings-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .settings-group-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--muted);
+    padding: 14px 18px 8px;
+    font-weight: 600;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    transition: background var(--tr);
+  }
+
+  .settings-row:last-child { border-bottom: none; }
+  .settings-row:hover { background: var(--surface2); }
+
+  .settings-row-info { flex: 1; }
+  .settings-row-label { font-size: 13px; color: var(--text); }
+  .settings-row-desc  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Controls */
+  input[type="text"], input[type="url"], select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color var(--tr);
+    min-width: 200px;
+  }
+  input[type="text"]:focus, input[type="url"]:focus, select:focus {
+    border-color: var(--accent);
+  }
+
+  select { cursor: pointer; appearance: none; padding-right: 28px; }
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+    font-size: 11px;
+  }
+
+  /* Toggle switch */
+  .toggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--surface3);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background var(--tr);
+    border: 1px solid var(--border);
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 2px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: transform var(--tr), background var(--tr);
+  }
+  .toggle input:checked + .toggle-slider {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color: var(--accent);
+  }
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(18px);
+    background: #fff;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background var(--tr), box-shadow var(--tr), transform var(--tr);
+    border: none;
+  }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--surface3); color: var(--text); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 2px 10px var(--glow);
+  }
+  .btn-primary:hover { box-shadow: 0 4px 18px var(--glow); transform: scale(1.03); }
+  .btn-danger {
+    background: rgba(239,68,68,0.12);
+    color: var(--danger);
+    border: 1px solid rgba(239,68,68,0.3);
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+  /* Color picker row */
+  input[type="color"] {
+    width: 36px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface2);
+    cursor: pointer;
+    padding: 2px;
+  }
+
+  /* Extensions list */
+  .ext-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    transition: background var(--tr);
+  }
+  .ext-card:last-child { border-bottom: none; }
+  .ext-card:hover { background: var(--surface2); }
+
+  .ext-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--surface3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--accent);
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .ext-icon img { width: 24px; height: 24px; object-fit: contain; }
+
+  .ext-info { flex: 1; }
+  .ext-name { font-size: 13px; color: var(--text); }
+  .ext-vers { font-size: 11px; color: var(--muted); }
+
+  /* Cookie whitelist */
+  #cookie-whitelist-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 14px 18px;
+  }
+  .cookie-tag {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text);
+  }
+  .cookie-tag button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color var(--tr);
+  }
+  .cookie-tag button:hover { color: var(--danger); }
+
+  #add-cookie-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 18px 14px;
+  }
+  #add-cookie-input { min-width: 0; flex: 1; }
+
+  /* Drag drop zone */
+  #ext-drop-zone {
+    margin: 0 18px 14px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12.5px;
+    transition: border-color var(--tr), background var(--tr), color var(--tr);
+    cursor: pointer;
+  }
+  #ext-drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(14,165,233,0.06);
+    color: var(--accent);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────── -->
+<nav id="sidebar">
+  <div class="settings-logo">
+    <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7.5" fill="none" stroke="url(#g)" stroke-width="1.5"/><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs></svg>
+    <span>VoidBrowser</span>
+  </div>
+
+  <button class="nav-item active" data-section="general">
+    <svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="5" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="1" width="5" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="8" width="5" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><rect x="8" y="8" width="5" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+    General
+  </button>
+  <button class="nav-item" data-section="design">
+    <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="7" cy="7" r="2" fill="currentColor"/></svg>
+    Design
+  </button>
+  <button class="nav-item" data-section="privacy">
+    <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="6" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4 6V4.5a3 3 0 0 1 6 0V6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    Privacy
+  </button>
+  <button class="nav-item" data-section="extensions">
+    <svg width="14" height="14" viewBox="0 0 14 14"><path d="M6 2H2v4h1.5a1.5 1.5 0 0 1 0 3H2v4h4v-1.5a1.5 1.5 0 0 1 3 0V13h4V9h-1.5a1.5 1.5 0 0 1 0-3H13V2H9v1.5a1.5 1.5 0 0 1-3 0V2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+    Extensions
+  </button>
+</nav>
+
+<!-- ── Main content ─────────────────────────────────────────────── -->
+<main id="main">
+
+  <!-- ── General ────────────────────────────────────────────────── -->
+  <section id="section-general" class="section active">
+    <h1 class="section-title">General</h1>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Startup</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Homepage</div>
+          <div class="settings-row-desc">Page shown when opening a new tab</div>
+        </div>
+        <div class="select-wrap">
+          <select id="homepage-select">
+            <option value="void://newtab">VoidBrowser New Tab</option>
+            <option value="https://duckduckgo.com">DuckDuckGo</option>
+            <option value="https://google.com">Google</option>
+            <option value="custom">Custom URL…</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row" id="custom-homepage-row" style="display:none">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Custom URL</div>
+        </div>
+        <input type="url" id="custom-homepage-input" placeholder="https://example.com" />
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Search</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Default search engine</div>
+          <div class="settings-row-desc">Used for address bar searches</div>
+        </div>
+        <div class="select-wrap">
+          <select id="search-engine-select">
+            <option value="duckduckgo">DuckDuckGo</option>
+            <option value="google">Google</option>
+            <option value="bing">Bing</option>
+            <option value="brave">Brave Search</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Downloads</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Download folder</div>
+          <div class="settings-row-desc" id="download-path-display">Loading…</div>
+        </div>
+        <button class="btn btn-secondary" id="btn-change-download-path">Change folder</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Updates</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Enable auto update</div>
+          <div class="settings-row-desc">Checks GitHub Releases for newer installer builds</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="updates-enabled-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">GitHub owner</div>
+          <div class="settings-row-desc">Your public GitHub username or organization</div>
+        </div>
+        <input type="text" id="updates-owner-input" placeholder="your-github-name" />
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">GitHub repository</div>
+          <div class="settings-row-desc">Repository that will host Releases and latest.yml</div>
+        </div>
+        <input type="text" id="updates-repo-input" placeholder="VoidBrowser" />
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Download updates automatically</div>
+          <div class="settings-row-desc">Downloads the update after it is found</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="updates-auto-download-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Status</div>
+          <div class="settings-row-desc" id="updates-status-text">Not configured.</div>
+        </div>
+        <button class="btn btn-secondary" id="btn-check-updates">Check now</button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Install downloaded update</div>
+          <div class="settings-row-desc">Shown after an update package has finished downloading</div>
+        </div>
+        <button class="btn btn-primary" id="btn-install-update" disabled>Install update</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Design ──────────────────────────────────────────────────── -->
+  <section id="section-design" class="section">
+    <h1 class="section-title">Design</h1>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Appearance</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Accent color</div>
+          <div class="settings-row-desc">Primary highlight color used throughout the UI</div>
+        </div>
+        <input type="color" id="accent-color-picker" value="#0ea5e9" />
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Start page background</div>
+          <div class="settings-row-desc">Choose a cleaner backdrop style for the new tab page</div>
+        </div>
+        <div class="select-wrap">
+          <select id="newtab-background-select">
+            <option value="aurora">Aurora</option>
+            <option value="graphite">Graphite</option>
+            <option value="midnight">Midnight</option>
+            <option value="minimal">Minimal</option>
+            <option value="image">Custom image…</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row" id="newtab-background-image-row" style="display:none">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Background image URL</div>
+          <div class="settings-row-desc">Remote image URL used on the start page background</div>
+        </div>
+        <input type="url" id="newtab-background-image-input" placeholder="https://example.com/background.jpg" />
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Coming soon</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Light theme</div>
+          <div class="settings-row-desc">A clean light mode for bright environments</div>
+        </div>
+        <button class="btn btn-secondary" disabled style="opacity:0.4;cursor:not-allowed">Soon</button>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Custom CSS</div>
+          <div class="settings-row-desc">Inject custom styles into pages</div>
+        </div>
+        <button class="btn btn-secondary" disabled style="opacity:0.4;cursor:not-allowed">Soon</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Privacy ─────────────────────────────────────────────────── -->
+  <section id="section-privacy" class="section">
+    <h1 class="section-title">Privacy</h1>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Adblocker</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Enable Adblocker</div>
+          <div class="settings-row-desc">Block ads and trackers at the network level</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="adblock-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Auto-update filter lists</div>
+          <div class="settings-row-desc">Download latest EasyList & EasyPrivacy on startup</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="adblock-update-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Update now</div>
+          <div class="settings-row-desc">Force re-download of all filter lists</div>
+        </div>
+        <button class="btn btn-secondary" id="btn-adblock-update">Update lists</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Cookies</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Clear cookies on exit</div>
+          <div class="settings-row-desc">Cookies outside the whitelist are deleted when VoidBrowser closes</div>
+        </div>
+        <span style="font-size:12px;color:#22c55e">Always on</span>
+      </div>
+
+      <div id="cookie-whitelist-tags"></div>
+      <div id="add-cookie-row">
+        <input type="text" id="add-cookie-input" placeholder="example.com" aria-label="Add domain to whitelist" />
+        <button class="btn btn-primary" id="btn-add-cookie">Add</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Fingerprinting</div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Randomize User-Agent</div>
+          <div class="settings-row-desc">Use a different browser identity each session</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="ua-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Extensions ──────────────────────────────────────────────── -->
+  <section id="section-extensions" class="section">
+    <h1 class="section-title">Extensions</h1>
+
+    <div class="settings-group">
+      <div class="settings-group-label">Install</div>
+      <div id="ext-drop-zone" role="button" tabindex="0" aria-label="Drop .crx file here to install">
+        <div style="font-size:22px;margin-bottom:6px">📦</div>
+        <div>Drop a <strong>.crx</strong> or <strong>.zip</strong> extension here</div>
+        <div style="margin-top:4px;font-size:11px;opacity:0.6">or click to choose a file</div>
+      </div>
+      <div class="settings-row" style="justify-content:flex-end;padding:8px 18px 14px">
+        <button class="btn btn-secondary" id="btn-install-ext-dialog">Choose file…</button>
+      </div>
+    </div>
+
+    <div class="settings-group" id="extensions-list-group">
+      <div class="settings-group-label">Installed</div>
+      <div id="extensions-list">
+        <div style="padding:16px 18px;color:var(--muted);font-size:12.5px">No extensions installed.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+'use strict';
+
+const api = window.voidAPI;
+let cfg = {};
+
+// ── Navigation ────────────────────────────────────────────────────────────
+const navItems = document.querySelectorAll('.nav-item');
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('section-' + item.dataset.section);
+    if (target) target.classList.add('active');
+  });
+});
+
+// ── Load config & populate UI ─────────────────────────────────────────────
+async function init() {
+  cfg = await api.config.get();
+  populateGeneral();
+  populateDesign();
+  populatePrivacy();
+  populateExtensions();
+}
+
+function escapeHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── General ───────────────────────────────────────────────────────────────
+function populateGeneral() {
+  const homepageSel = document.getElementById('homepage-select');
+  const customRow   = document.getElementById('custom-homepage-row');
+  const customInput = document.getElementById('custom-homepage-input');
+  const known = ['void://newtab','https://duckduckgo.com','https://google.com'];
+  if (known.includes(cfg.homepage)) {
+    homepageSel.value = cfg.homepage;
+  } else {
+    homepageSel.value = 'custom';
+    customRow.style.display = '';
+    customInput.value = cfg.homepage || '';
+  }
+
+  homepageSel.addEventListener('change', async () => {
+    if (homepageSel.value === 'custom') {
+      customRow.style.display = '';
+    } else {
+      customRow.style.display = 'none';
+      cfg.homepage = homepageSel.value;
+      await api.config.set({ homepage: cfg.homepage });
+    }
+  });
+
+  customInput.addEventListener('change', async () => {
+    cfg.homepage = customInput.value.trim() || 'void://newtab';
+    await api.config.set({ homepage: cfg.homepage });
+  });
+
+  const engineSel = document.getElementById('search-engine-select');
+  engineSel.value = cfg.search_engine || 'duckduckgo';
+  engineSel.addEventListener('change', async () => {
+    cfg.search_engine = engineSel.value;
+    await api.config.set({ search_engine: cfg.search_engine });
+  });
+
+  const dlDisplay = document.getElementById('download-path-display');
+  dlDisplay.textContent = cfg.download_path || 'Default Downloads folder';
+
+  document.getElementById('btn-change-download-path').addEventListener('click', async () => {
+    const newPath = await api.downloads.selectPath();
+    if (newPath) {
+      cfg.download_path = newPath;
+      await api.config.set({ download_path: newPath });
+      dlDisplay.textContent = newPath;
+    }
+  });
+
+  const updatesEnabled = document.getElementById('updates-enabled-toggle');
+  const updatesAutoDownload = document.getElementById('updates-auto-download-toggle');
+  const updatesOwnerInput = document.getElementById('updates-owner-input');
+  const updatesRepoInput = document.getElementById('updates-repo-input');
+  const updatesStatusText = document.getElementById('updates-status-text');
+  const checkButton = document.getElementById('btn-check-updates');
+  const installButton = document.getElementById('btn-install-update');
+
+  updatesEnabled.checked = cfg.updates_enabled !== false;
+  updatesAutoDownload.checked = cfg.updates_auto_download !== false;
+  updatesOwnerInput.value = cfg.updates_github_owner || '';
+  updatesRepoInput.value = cfg.updates_github_repo || '';
+
+  async function saveUpdateConfig(updates) {
+    cfg = { ...cfg, ...updates };
+    await api.config.set(updates);
+    await refreshUpdateStatus();
+  }
+
+  async function refreshUpdateStatus() {
+    const status = await api.updates.getStatus();
+    updatesStatusText.textContent = status.message || 'Not configured.';
+    installButton.disabled = status.state !== 'downloaded';
+  }
+
+  updatesEnabled.addEventListener('change', async () => {
+    await saveUpdateConfig({ updates_enabled: updatesEnabled.checked });
+  });
+
+  updatesAutoDownload.addEventListener('change', async () => {
+    await saveUpdateConfig({ updates_auto_download: updatesAutoDownload.checked });
+  });
+
+  updatesOwnerInput.addEventListener('change', async () => {
+    await saveUpdateConfig({ updates_github_owner: updatesOwnerInput.value.trim() });
+  });
+
+  updatesRepoInput.addEventListener('change', async () => {
+    await saveUpdateConfig({ updates_github_repo: updatesRepoInput.value.trim() });
+  });
+
+  checkButton.addEventListener('click', async () => {
+    checkButton.disabled = true;
+    checkButton.textContent = 'Checking…';
+    await api.updates.check();
+    await refreshUpdateStatus();
+    checkButton.disabled = false;
+    checkButton.textContent = 'Check now';
+  });
+
+  installButton.addEventListener('click', async () => {
+    const result = await api.updates.install();
+    if (!result.success) {
+      await refreshUpdateStatus();
+    }
+  });
+
+  refreshUpdateStatus();
+  setInterval(refreshUpdateStatus, 3000);
+}
+
+// ── Design ────────────────────────────────────────────────────────────────
+function populateDesign() {
+  const picker = document.getElementById('accent-color-picker');
+  const backgroundSelect = document.getElementById('newtab-background-select');
+  const backgroundRow = document.getElementById('newtab-background-image-row');
+  const backgroundImageInput = document.getElementById('newtab-background-image-input');
+
+  picker.value = cfg.accent_color || '#0ea5e9';
+  picker.addEventListener('input', async () => {
+    cfg.accent_color = picker.value;
+    await api.config.set({ accent_color: cfg.accent_color });
+  });
+
+  backgroundSelect.value = cfg.newtab_background_preset || 'aurora';
+  backgroundImageInput.value = cfg.newtab_background_image || '';
+
+  const syncBackgroundVisibility = () => {
+    backgroundRow.style.display = backgroundSelect.value === 'image' ? '' : 'none';
+  };
+
+  backgroundSelect.addEventListener('change', async () => {
+    cfg.newtab_background_preset = backgroundSelect.value;
+    await api.config.set({ newtab_background_preset: cfg.newtab_background_preset });
+    syncBackgroundVisibility();
+  });
+
+  backgroundImageInput.addEventListener('change', async () => {
+    cfg.newtab_background_image = backgroundImageInput.value.trim();
+    await api.config.set({ newtab_background_image: cfg.newtab_background_image });
+  });
+
+  syncBackgroundVisibility();
+}
+
+// ── Privacy ───────────────────────────────────────────────────────────────
+function populatePrivacy() {
+  // Adblock toggles
+  const adblockToggle = document.getElementById('adblock-toggle');
+  const adblockUpdateToggle = document.getElementById('adblock-update-toggle');
+  const uaToggle = document.getElementById('ua-toggle');
+
+  adblockToggle.checked = cfg.adblock_enabled !== false;
+  adblockUpdateToggle.checked = cfg.adblock_online_update !== false;
+  uaToggle.checked = cfg.user_agent_randomize !== false;
+
+  adblockToggle.addEventListener('change', async () => {
+    cfg.adblock_enabled = adblockToggle.checked;
+    await api.config.set({ adblock_enabled: cfg.adblock_enabled });
+  });
+  adblockUpdateToggle.addEventListener('change', async () => {
+    cfg.adblock_online_update = adblockUpdateToggle.checked;
+    await api.config.set({ adblock_online_update: cfg.adblock_online_update });
+  });
+  uaToggle.addEventListener('change', async () => {
+    cfg.user_agent_randomize = uaToggle.checked;
+    await api.config.set({ user_agent_randomize: cfg.user_agent_randomize });
+  });
+
+  // Adblock update
+  document.getElementById('btn-adblock-update').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.textContent = 'Updating…';
+    btn.disabled = true;
+    const result = await api.adblock.update();
+    btn.textContent = result.success ? 'Updated ✓' : 'Failed ✗';
+    setTimeout(() => { btn.textContent = 'Update lists'; btn.disabled = false; }, 3000);
+  });
+
+  // Cookie whitelist
+  renderCookieWhitelist();
+
+  const addCookieInput = document.getElementById('add-cookie-input');
+  document.getElementById('btn-add-cookie').addEventListener('click', async () => {
+    const domain = addCookieInput.value.trim().toLowerCase();
+    if (!domain) return;
+    if (!cfg.cookie_whitelist) cfg.cookie_whitelist = [];
+    if (!cfg.cookie_whitelist.includes(domain)) {
+      cfg.cookie_whitelist.push(domain);
+      await api.config.set({ cookie_whitelist: cfg.cookie_whitelist });
+      renderCookieWhitelist();
+    }
+    addCookieInput.value = '';
+  });
+
+  addCookieInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-add-cookie').click();
+  });
+}
+
+function renderCookieWhitelist() {
+  const container = document.getElementById('cookie-whitelist-tags');
+  container.innerHTML = '';
+  const list = cfg.cookie_whitelist || [];
+  if (list.length === 0) {
+    container.innerHTML = '<span style="padding:14px 18px;font-size:12px;color:var(--muted)">No exceptions — all cookies cleared on exit</span>';
+    return;
+  }
+  list.forEach((domain, idx) => {
+    const tag = document.createElement('div');
+    tag.className = 'cookie-tag';
+    tag.innerHTML = `${escapeHtml(domain)}<button title="Remove" aria-label="Remove ${escapeHtml(domain)}">×</button>`;
+    tag.querySelector('button').addEventListener('click', async () => {
+      cfg.cookie_whitelist.splice(idx, 1);
+      await api.config.set({ cookie_whitelist: cfg.cookie_whitelist });
+      renderCookieWhitelist();
+    });
+    container.appendChild(tag);
+  });
+}
+
+// ── Extensions ────────────────────────────────────────────────────────────
+async function populateExtensions() {
+  await renderExtensions();
+
+  const dropZone = document.getElementById('ext-drop-zone');
+
+  dropZone.addEventListener('click', async () => {
+    const filePath = await api.extensions.openDialog();
+    if (!filePath) return;
+    await installExtension(filePath);
+  });
+  dropZone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dropZone.click(); }
+  });
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    await installExtension(files[0].path);
+  });
+
+  document.getElementById('btn-install-ext-dialog').addEventListener('click', async () => {
+    const filePath = await api.extensions.openDialog();
+    if (!filePath) return;
+    await installExtension(filePath);
+  });
+}
+
+async function installExtension(filePath) {
+  const result = await api.extensions.install(filePath);
+  if (result.success) {
+    await renderExtensions();
+  } else {
+    alert('Failed to install extension:\n' + result.error);
+  }
+}
+
+async function renderExtensions() {
+  const list = document.getElementById('extensions-list');
+  const exts = await api.extensions.getAll();
+
+  if (!exts || exts.length === 0) {
+    list.innerHTML = '<div style="padding:16px 18px;color:var(--muted);font-size:12.5px">No extensions installed.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  exts.forEach(ext => {
+    const card = document.createElement('div');
+    card.className = 'ext-card';
+
+    const iconEl = document.createElement('div');
+    iconEl.className = 'ext-icon';
+    if (ext.iconPath) {
+      const img = document.createElement('img');
+      img.src = 'file://' + ext.iconPath;
+      img.alt = ext.name;
+      img.addEventListener('error', () => { img.style.display='none'; iconEl.textContent = ext.name[0] || '?'; });
+      iconEl.appendChild(img);
+    } else {
+      iconEl.textContent = ext.name[0]?.toUpperCase() || '?';
+    }
+
+    card.innerHTML += `
+      <div class="ext-info">
+        <div class="ext-name">${escapeHtml(ext.name)}</div>
+        <div class="ext-vers">v${escapeHtml(ext.version)} · ${escapeHtml(ext.description || '')}</div>
+      </div>
+      <label class="toggle" title="${ext.enabled ? 'Disable' : 'Enable'}">
+        <input type="checkbox" ${ext.enabled ? 'checked' : ''} data-ext-id="${escapeHtml(ext.id)}" class="ext-enable-toggle"/>
+        <span class="toggle-slider"></span>
+      </label>
+      <button class="btn btn-danger" data-ext-id="${escapeHtml(ext.id)}" style="margin-left:6px">Remove</button>
+    `;
+
+    card.prepend(iconEl);
+
+    card.querySelector('.ext-enable-toggle').addEventListener('change', async (e) => {
+      await api.extensions.toggle(ext.id, e.target.checked);
+    });
+
+    card.querySelector('.btn-danger').addEventListener('click', async () => {
+      if (!confirm(`Remove "${ext.name}"?`)) return;
+      api.extensions.remove(ext.id);
+      await renderExtensions();
+    });
+
+    list.appendChild(card);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

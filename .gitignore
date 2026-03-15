@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+release/
+release-setup/
+release-single/
+dist/
+out/
+build/iexpress-stage/
+build/*.zip
+
+# Runtime/cache
+adblock_cache/
+*.log
+npm-debug.log*
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/

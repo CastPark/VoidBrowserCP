@@ -1,0 +1,52 @@
+{
+  "name": "voidbrowsercp",
+  "version": "1.0.0",
+  "description": "VoidBrowser – Modern, minimal, dark Electron browser",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder -w",
+    "dist:portable": "electron-packager . VoidBrowserCP --platform=win32 --arch=x64 --out=release --overwrite --prune=true",
+    "dist:setup": "electron-builder --config build/installer-builder.json --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9",
+    "node-fetch": "^3.3.2",
+    "adm-zip": "^0.5.10"
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-packager": "^17.1.2"
+  },
+  "author": "CastPark",
+  "license": "MIT",
+  "keywords": ["browser", "electron", "dark", "minimal"],
+  "build": {
+    "appId": "com.castpark.voidbrowsercp",
+    "productName": "VoidBrowserCP",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "**/*",
+      "!release/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

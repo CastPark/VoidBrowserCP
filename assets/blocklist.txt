@@ -1,0 +1,57 @@
+# VoidBrowser Local Ad Blocklist
+# Fallback blocklist used when internet is unavailable.
+# Format: one domain per line, or ABP format (||domain.com^)
+# This list is minimal – the real lists are downloaded from EasyList on startup.
+
+||doubleclick.net^
+||googleadservices.com^
+||googlesyndication.com^
+||adservice.google.com^
+||pagead2.googlesyndication.com^
+||ads.youtube.com^
+||amazon-adsystem.com^
+||adsystem.amazon.com^
+||advertising.com^
+||ads.twitter.com^
+||ads.linkedin.com^
+||ads.facebook.com^
+||pixel.facebook.com^
+||connect.facebook.net^
+||scorecardresearch.com^
+||outbrain.com^
+||taboola.com^
+||criteo.com^
+||criteo.net^
+||adsrvr.org^
+||rubiconproject.com^
+||openx.net^
+||pubmatic.com^
+||smartadserver.com^
+||media.net^
+||analytics.google.com^
+||google-analytics.com^
+||googletagmanager.com^
+||googletagservices.com^
+||hotjar.com^
+||mixpanel.com^
+||segment.com^
+||segment.io^
+||tracker.crazyegg.com^
+||kissmetrics.com^
+||intercomcdn.com^
+||zendesk.com^
+||ads.snapchat.com^
+||sc-static.net^
+||ads.tiktok.com^
+||analytics.tiktok.com^
+||pixel.advertising.com^
+||imrworldwide.com^
+||quantserve.com^
+||chartbeat.com^
+||newrelic.com^
+||nr-data.net^
+||bugsnag.com^
+||loggly.com^
+||ads.yahoo.com^
+||adtech.yahoo.com^
+||oath.com^

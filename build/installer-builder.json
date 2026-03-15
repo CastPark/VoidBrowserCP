@@ -1,0 +1,41 @@
+{
+  "appId": "com.castpark.voidbrowsercp",
+  "productName": "VoidBrowserCP",
+  "directories": {
+    "output": "release-setup"
+  },
+  "files": [
+    "**/*",
+    "!release/**/*",
+    "!release-single/**/*",
+    "!release-setup/**/*",
+    "!build/iexpress-stage/**/*",
+    "!node_modules/.cache/**/*"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "signAndEditExecutable": false,
+    "artifactName": "VoidBrowserCP-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": false,
+    "differentialPackage": false
+  },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "CastPark",
+      "repo": "VoidBrowserCP",
+      "releaseType": "release"
+    }
+  ]
+}

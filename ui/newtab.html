@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.open-meteo.com https://ipapi.co https://ipwho.is; script-src 'self'; style-src 'self'; img-src 'self' data: https:;" />
+  <title>New Tab – VoidBrowser</title>
+  <link rel="stylesheet" href="newtab.css" />
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <main id="container">
+    <section id="clock-section" aria-label="Clock">
+      <div id="clock">00:00</div>
+      <div id="date">Sunday, January 1</div>
+    </section>
+
+    <section id="weather-widget" aria-label="Weather" aria-live="polite">
+      <div id="weather-inner">
+        <span id="weather-icon">⋯</span>
+        <span id="weather-temp">--</span>
+        <span id="weather-desc">Loading weather...</span>
+      </div>
+      <div id="weather-location"></div>
+    </section>
+
+    <section id="search-section" aria-label="Search">
+      <form id="search-form" role="search">
+        <div id="search-bar">
+          <svg id="search-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="10.5" y1="10.5" x2="14" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <input id="search-input" type="text" spellcheck="false" autocomplete="off" placeholder="Search or enter URL" aria-label="Search" />
+        </div>
+      </form>
+    </section>
+
+    <section id="quicklinks-section" aria-label="Quick access">
+      <div id="quicklinks-grid" role="list"></div>
+      <button id="btn-add-quicklink" title="Add shortcut" aria-label="Add shortcut">+ Add shortcut</button>
+
+      <form id="quicklink-form" class="hidden" aria-label="Add shortcut form">
+        <input id="quicklink-name" type="text" placeholder="Name (e.g. GitHub)" />
+        <input id="quicklink-url" type="text" placeholder="URL (https://example.com)" />
+        <div id="quicklink-form-actions">
+          <button id="quicklink-cancel" type="button">Cancel</button>
+          <button id="quicklink-save" type="submit">Save</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="newtab.js"></script>
+</body>
+</html>

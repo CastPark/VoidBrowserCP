@@ -1,0 +1,18 @@
+{
+  "adblock_enabled": true,
+  "adblock_online_update": true,
+  "search_engine": "google",
+  "homepage": "void://newtab",
+  "download_path": "",
+  "ai_enabled": false,
+  "ai_model": "llama3",
+  "accent_color": "#0ea5e9",
+  "newtab_background_preset": "graphite",
+  "newtab_background_image": "https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwallpapercave.com%2Fhttyd-computer-wallpapers&ved=0CBYQjRxqFwoTCLCIkt-qopMDFQAAAAAdAAAAABAH&opi=89978449",
+  "cookie_whitelist": [],
+  "user_agent_randomize": true,
+  "updates_enabled": true,
+  "updates_auto_download": true,
+  "updates_github_owner": "CastPark",
+  "updates_github_repo": "VoidBrowserCP"
+}
