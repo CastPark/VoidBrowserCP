@@ -520,7 +520,8 @@ function createBrowserView(tabId, url) {
     }
   });
 
-  view.webContents.on('did-finish-load', () => {
+  // Single authoritative "loading stopped" handler – covers normal load, stop(), and errors.
+  view.webContents.on('did-stop-loading', () => {
     const url = view.webContents.getURL();
     const title = view.webContents.getTitle();
     const canGoBack = view.webContents.canGoBack();
@@ -532,6 +533,8 @@ function createBrowserView(tabId, url) {
 
   view.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
     if (!isMainFrame || !mainWindow) return;
+    // ERR_ABORTED (-3) means stop() was called – did-stop-loading already handles it.
+    if (errorCode === -3) return;
     mainWindow.webContents.send('tab-updated', {
       tabId,
       url: validatedURL || view.webContents.getURL(),
@@ -848,17 +851,48 @@ ipcMain.handle('updates-install', () => {
   return { success: true };
 });
 
-// Resize relay (when toolbar height changes)
-ipcMain.on('toolbar-resize', (event, { height }) => {
-  if (typeof height === 'number' && Number.isFinite(height)) {
-    // Keep bounds sane and prevent accidental negative view heights.
-    chromeHeight = Math.max(60, Math.min(220, Math.round(height)));
-  }
+// Resize relay with smooth animation (used when popovers open/close)
+let _resizeTarget = null;
+let _resizeInterval = null;
+
+function _applyViewBoundsForHeight(h) {
   if (activeTabId === null) return;
   const view = tabViews.get(activeTabId);
   if (!view || !mainWindow) return;
-  const [w, h] = mainWindow.getContentSize();
-  view.setBounds({ x: 0, y: chromeHeight, width: w, height: Math.max(0, h - chromeHeight) });
+  const [w, winH] = mainWindow.getContentSize();
+  view.setBounds({ x: 0, y: h, width: w, height: Math.max(0, winH - h) });
+}
+
+ipcMain.on('toolbar-resize', (event, { height }) => {
+  if (typeof height !== 'number' || !Number.isFinite(height)) return;
+  const target = Math.max(60, Math.min(500, Math.round(height)));
+
+  // Cancel any ongoing animation
+  if (_resizeInterval) { clearInterval(_resizeInterval); _resizeInterval = null; }
+
+  const start = chromeHeight;
+  const delta = target - start;
+  if (Math.abs(delta) < 2) {
+    chromeHeight = target;
+    _applyViewBoundsForHeight(chromeHeight);
+    return;
+  }
+
+  // Smoothly animate over ~150 ms
+  const duration = 150;
+  const startTime = Date.now();
+  _resizeInterval = setInterval(() => {
+    const t = Math.min(1, (Date.now() - startTime) / duration);
+    const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    chromeHeight = Math.round(start + delta * eased);
+    _applyViewBoundsForHeight(chromeHeight);
+    if (t >= 1) {
+      clearInterval(_resizeInterval);
+      _resizeInterval = null;
+      chromeHeight = target;
+      _applyViewBoundsForHeight(chromeHeight);
+    }
+  }, 16);
 });
 
 app.on('window-all-closed', () => {
