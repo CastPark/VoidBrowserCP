@@ -13,6 +13,9 @@ let tabs = [];        // [{ id, title, url, favicon, loading, active }]
 let activeTabId = null;
 let tabIdCounter = 0;
 let dragSrcTabId = null;  // for drag-and-drop reorder
+let baseChromeHeight = 82;
+let isAdblockMenuOpen = false;
+let isExtensionsMenuOpen = false;
 
 // ─── Init ──────────────────────────────────────────────────────────────────
 async function init() {
@@ -21,6 +24,7 @@ async function init() {
   bindNavButtons();
   bindTabBar();
   bindAdblockMenu();
+  bindExtensionsMenu();
   bindAddressBar();
   bindCommandBar();
   bindDownloads();
@@ -42,8 +46,39 @@ function syncChromeHeight() {
   if (!titlebar || !toolbar) return;
   const total = titlebar.offsetHeight + toolbar.offsetHeight;
   if (Number.isFinite(total) && total > 0) {
-    api.ui.setToolbarHeight(total);
+    baseChromeHeight = total;
+    applyChromeInsetForMenus();
   }
+}
+
+function applyChromeInsetForMenus() {
+  const extra = (isAdblockMenuOpen || isExtensionsMenuOpen) ? 230 : 0;
+  api.ui.setToolbarHeight(baseChromeHeight + extra);
+}
+
+function closeOverlayMenus() {
+  const adblock = document.getElementById('adblock-popover');
+  const ext = document.getElementById('extensions-popover');
+  const adblockBtn = document.getElementById('adblock-badge');
+  const extBtn = document.getElementById('btn-extensions');
+
+  if (adblock) adblock.classList.add('hidden');
+  if (ext) ext.classList.add('hidden');
+
+  isAdblockMenuOpen = false;
+  isExtensionsMenuOpen = false;
+
+  if (adblockBtn) {
+    adblockBtn.classList.remove('active');
+    adblockBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (extBtn) {
+    extBtn.classList.remove('active');
+    extBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  applyChromeInsetForMenus();
 }
 
 // ─── Window Controls ───────────────────────────────────────────────────────
@@ -92,20 +127,19 @@ function bindAdblockMenu() {
     event.stopPropagation();
     syncAdblockMenu();
     const willOpen = popover.classList.contains('hidden');
+    closeOverlayMenus();
     popover.classList.toggle('hidden', !willOpen);
     badge.classList.toggle('active', willOpen);
     badge.setAttribute('aria-expanded', String(willOpen));
+    isAdblockMenuOpen = willOpen;
+    applyChromeInsetForMenus();
   });
 
   popover.addEventListener('click', (event) => {
     event.stopPropagation();
   });
 
-  document.addEventListener('click', () => {
-    popover.classList.add('hidden');
-    badge.classList.remove('active');
-    badge.setAttribute('aria-expanded', 'false');
-  });
+  document.addEventListener('click', () => closeOverlayMenus());
 
   enabledToggle.addEventListener('change', async () => {
     config.adblock_enabled = enabledToggle.checked;
@@ -131,13 +165,41 @@ function bindAdblockMenu() {
   });
 
   settingsBtn.addEventListener('click', () => {
-    popover.classList.add('hidden');
-    badge.classList.remove('active');
-    badge.setAttribute('aria-expanded', 'false');
+    closeOverlayMenus();
     createTab('void://settings');
   });
 
   syncAdblockMenu();
+}
+
+function bindExtensionsMenu() {
+  const btn = document.getElementById('btn-extensions');
+  const popover = document.getElementById('extensions-popover');
+  const settingsBtn = document.getElementById('btn-extensions-settings');
+
+  btn.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    const willOpen = popover.classList.contains('hidden');
+    closeOverlayMenus();
+
+    if (!willOpen) return;
+
+    await renderExtensions();
+    popover.classList.remove('hidden');
+    btn.classList.add('active');
+    btn.setAttribute('aria-expanded', 'true');
+    isExtensionsMenuOpen = true;
+    applyChromeInsetForMenus();
+  });
+
+  popover.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+
+  settingsBtn.addEventListener('click', () => {
+    closeOverlayMenus();
+    createTab('void://settings');
+  });
 }
 
 // ─── Address Bar ────────────────────────────────────────────────────────────
@@ -537,25 +599,57 @@ function renderDownloads(list) {
 
 // ─── Extensions ────────────────────────────────────────────────────────────
 async function renderExtensions() {
-  const area = document.getElementById('extensions-area');
-  area.innerHTML = '';
+  const menuList = document.getElementById('extensions-menu-list');
+  const countBadge = document.getElementById('extensions-count');
+  const countLabel = document.getElementById('extensions-popover-count');
+  if (!menuList || !countBadge || !countLabel) return;
+
+  menuList.innerHTML = '';
   const exts = await api.extensions.getAll();
-  exts.filter(e => e.enabled).forEach(ext => {
-    const btn = document.createElement('button');
-    btn.className = 'toolbar-btn ext-btn';
-    btn.title = ext.name;
+
+  const enabled = exts.filter(e => e.enabled);
+  countLabel.textContent = `${enabled.length} active`;
+
+  if (enabled.length > 0) {
+    countBadge.classList.remove('hidden');
+    countBadge.textContent = String(enabled.length);
+  } else {
+    countBadge.classList.add('hidden');
+  }
+
+  if (enabled.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'ext-menu-empty';
+    empty.textContent = 'No active extensions';
+    menuList.appendChild(empty);
+    return;
+  }
+
+  enabled.forEach(ext => {
+    const row = document.createElement('div');
+    row.className = 'ext-menu-item';
+    row.title = ext.name;
+
+    const iconWrap = document.createElement('span');
+    iconWrap.className = 'ext-menu-icon';
+
     if (ext.iconPath) {
       const img = document.createElement('img');
       img.src = 'file://' + ext.iconPath;
-      img.width = 16;
-      img.height = 16;
       img.alt = ext.name;
-      img.addEventListener('error', () => { btn.textContent = ext.name[0] || '?'; });
-      btn.appendChild(img);
+      img.addEventListener('error', () => { iconWrap.textContent = ext.name[0] || '?'; });
+      iconWrap.appendChild(img);
     } else {
-      btn.textContent = ext.name[0] || '?';
+      iconWrap.textContent = ext.name[0] || '?';
     }
-    area.appendChild(btn);
+
+    const name = document.createElement('span');
+    name.className = 'ext-menu-name';
+    name.textContent = ext.name;
+
+    row.appendChild(iconWrap);
+    row.appendChild(name);
+    menuList.appendChild(row);
   });
 }
 
