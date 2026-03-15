@@ -1,3 +1,3 @@
-# VoidBrowserCP
+# VoidBrowser
 
-VoidBrowserCP
+VoidBrowser

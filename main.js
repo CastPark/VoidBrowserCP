@@ -32,6 +32,8 @@ protocol.registerSchemesAsPrivileged([
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const CONFIG_PATH = path.join(__dirname, 'config.json');
+const FIXED_UPDATE_OWNER = 'CastPark';
+const FIXED_UPDATE_REPO = 'VoidBrowserCP';
 let config = {};
 const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
 
@@ -61,6 +63,10 @@ function loadConfig() {
     console.error('[Config] Failed to load config, using defaults:', err.message);
     config = getDefaultConfig();
   }
+
+  // Keep update source pinned to the project owner's repository.
+  config.updates_github_owner = FIXED_UPDATE_OWNER;
+  config.updates_github_repo = FIXED_UPDATE_REPO;
 }
 
 function getDefaultConfig() {
@@ -79,8 +85,8 @@ function getDefaultConfig() {
     user_agent_randomize: true,
     updates_enabled: true,
     updates_auto_download: true,
-    updates_github_owner: '',
-    updates_github_repo: ''
+    updates_github_owner: FIXED_UPDATE_OWNER,
+    updates_github_repo: FIXED_UPDATE_REPO
   };
 }
 
@@ -121,8 +127,8 @@ function setUpdateStatus(next) {
 }
 
 function getUpdateFeedConfig() {
-  const owner = String(config.updates_github_owner || '').trim();
-  const repo = String(config.updates_github_repo || '').trim();
+  const owner = String(FIXED_UPDATE_OWNER).trim();
+  const repo = String(FIXED_UPDATE_REPO).trim();
 
   if (!owner || !repo) return null;
 
@@ -703,7 +709,14 @@ ipcMain.handle('get-config', () => {
 });
 
 ipcMain.handle('set-config', (event, updates) => {
-  config = { ...config, ...updates };
+  // Owner/repo are fixed for safety and should not be user-editable.
+  const { updates_github_owner, updates_github_repo, ...safeUpdates } = updates || {};
+  config = {
+    ...config,
+    ...safeUpdates,
+    updates_github_owner: FIXED_UPDATE_OWNER,
+    updates_github_repo: FIXED_UPDATE_REPO
+  };
   saveConfig();
   // Apply relevant changes immediately
   if (updates.adblock_enabled !== undefined) {
@@ -808,7 +821,23 @@ ipcMain.handle('updates-check', async () => {
 });
 
 ipcMain.handle('updates-install', () => {
+  if (!app.isPackaged) {
+    setUpdateStatus({
+      state: 'disabled',
+      message: 'Install update works only in the installed app build.',
+      progress: null,
+      downloaded: false
+    });
+    return { success: false, error: 'app-not-packaged' };
+  }
+
   if (updateStatus.state !== 'downloaded') {
+    setUpdateStatus({
+      state: updateStatus.state,
+      message: 'No downloaded update yet. Click Check now first.',
+      progress: updateStatus.progress,
+      downloaded: false
+    });
     return { success: false, error: 'update-not-ready' };
   }
 

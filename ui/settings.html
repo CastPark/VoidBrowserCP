@@ -451,17 +451,10 @@
       </div>
       <div class="settings-row">
         <div class="settings-row-info">
-          <div class="settings-row-label">GitHub owner</div>
-          <div class="settings-row-desc">Your public GitHub username or organization</div>
+          <div class="settings-row-label">Update source</div>
+          <div class="settings-row-desc">Pinned to your repository for safety</div>
         </div>
-        <input type="text" id="updates-owner-input" placeholder="your-github-name" />
-      </div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">GitHub repository</div>
-          <div class="settings-row-desc">Repository that will host Releases and latest.yml</div>
-        </div>
-        <input type="text" id="updates-repo-input" placeholder="VoidBrowser" />
+        <input type="text" id="updates-source-input" readonly />
       </div>
       <div class="settings-row">
         <div class="settings-row-info">
@@ -720,16 +713,15 @@ function populateGeneral() {
 
   const updatesEnabled = document.getElementById('updates-enabled-toggle');
   const updatesAutoDownload = document.getElementById('updates-auto-download-toggle');
-  const updatesOwnerInput = document.getElementById('updates-owner-input');
-  const updatesRepoInput = document.getElementById('updates-repo-input');
+  const updatesSourceInput = document.getElementById('updates-source-input');
   const updatesStatusText = document.getElementById('updates-status-text');
   const checkButton = document.getElementById('btn-check-updates');
   const installButton = document.getElementById('btn-install-update');
 
   updatesEnabled.checked = cfg.updates_enabled !== false;
   updatesAutoDownload.checked = cfg.updates_auto_download !== false;
-  updatesOwnerInput.value = cfg.updates_github_owner || '';
-  updatesRepoInput.value = cfg.updates_github_repo || '';
+  updatesSourceInput.value = `${cfg.updates_github_owner || 'CastPark'}/${cfg.updates_github_repo || 'VoidBrowserCP'}`;
+  updatesSourceInput.title = updatesSourceInput.value;
 
   async function saveUpdateConfig(updates) {
     cfg = { ...cfg, ...updates };
@@ -751,27 +743,39 @@ function populateGeneral() {
     await saveUpdateConfig({ updates_auto_download: updatesAutoDownload.checked });
   });
 
-  updatesOwnerInput.addEventListener('change', async () => {
-    await saveUpdateConfig({ updates_github_owner: updatesOwnerInput.value.trim() });
-  });
-
-  updatesRepoInput.addEventListener('change', async () => {
-    await saveUpdateConfig({ updates_github_repo: updatesRepoInput.value.trim() });
-  });
-
   checkButton.addEventListener('click', async () => {
     checkButton.disabled = true;
     checkButton.textContent = 'Checking…';
-    await api.updates.check();
+    const result = await api.updates.check();
+    if (!result.success && result.error === 'app-not-packaged') {
+      updatesStatusText.textContent = 'Updates work only in installed build, not in dev mode.';
+    }
     await refreshUpdateStatus();
     checkButton.disabled = false;
     checkButton.textContent = 'Check now';
   });
 
   installButton.addEventListener('click', async () => {
+    installButton.disabled = true;
+    installButton.textContent = 'Installing…';
     const result = await api.updates.install();
     if (!result.success) {
+      if (result.error === 'app-not-packaged') {
+        updatesStatusText.textContent = 'Install update works only in installed build.';
+      } else if (result.error === 'update-not-ready') {
+        updatesStatusText.textContent = 'No downloaded update yet. Click Check now first.';
+      }
       await refreshUpdateStatus();
+      installButton.textContent = 'Install update';
+      installButton.disabled = false;
+    }
+  });
+
+  api.on('update-status', (status) => {
+    updatesStatusText.textContent = status.message || 'Not configured.';
+    installButton.disabled = status.state !== 'downloaded';
+    if (status.state === 'downloaded') {
+      installButton.textContent = 'Install update';
     }
   });
 

@@ -1,6 +1,6 @@
 {
-  "appId": "com.castpark.voidbrowsercp",
-  "productName": "VoidBrowserCP",
+  "appId": "com.castpark.voidbrowser",
+  "productName": "VoidBrowser",
   "directories": {
     "output": "release-setup"
   },
@@ -22,7 +22,7 @@
       }
     ],
     "signAndEditExecutable": false,
-    "artifactName": "VoidBrowserCP-Setup-${version}.${ext}"
+    "artifactName": "VoidBrowser-Setup-${version}.${ext}"
   },
   "nsis": {
     "oneClick": false,
