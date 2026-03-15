@@ -13,6 +13,7 @@
     "!node_modules/.cache/**/*"
   ],
   "win": {
+    "icon": "assets/icon.ico",
     "target": [
       {
         "target": "nsis",
@@ -28,7 +29,10 @@
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
     "deleteAppDataOnUninstall": false,
-    "differentialPackage": false
+    "differentialPackage": false,
+    "installerIcon": "assets/icon.ico",
+    "uninstallerIcon": "assets/icon.ico",
+    "installerHeaderIcon": "assets/icon.ico"
   },
   "publish": [
     {

@@ -1,6 +1,6 @@
 {
   "name": "voidbrowser",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "VoidBrowser – Modern, minimal, dark Electron browser",
   "main": "main.js",
   "scripts": {
@@ -40,6 +40,7 @@
       "!release/**/*"
     ],
     "win": {
+      "icon": "assets/icon.ico",
       "target": [
         {
           "target": "nsis",

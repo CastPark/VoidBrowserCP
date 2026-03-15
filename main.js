@@ -416,7 +416,7 @@ function createMainWindow() {
       sandbox: false,       // Required for preload with contextIsolation
       spellcheck: true
     },
-    icon: path.join(__dirname, 'assets', 'icon.png')
+    icon: path.join(__dirname, 'assets', 'icon.ico')
   });
 
   mainWindow.loadFile(path.join(__dirname, 'ui', 'browser.html'));

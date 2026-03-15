@@ -12,6 +12,7 @@
     "!node_modules/.cache/**/*"
   ],
   "win": {
+    "icon": "assets/icon.ico",
     "target": [
       "portable"
     ],
