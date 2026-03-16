@@ -17,9 +17,57 @@ let baseChromeHeight = 82;
 let isAdblockMenuOpen = false;
 let isExtensionsMenuOpen = false;
 
+const THEMES = {
+  dark: {
+    bg: '#0d0d0d',
+    surface: '#141414',
+    surface2: '#1a1a1a',
+    surface3: '#1e293b',
+    border: '#1e293b',
+    text: '#e2e8f0',
+    textMuted: '#64748b',
+    danger: '#ef4444',
+    lock: '#22c55e'
+  },
+  midnight: {
+    bg: '#05070d',
+    surface: '#0b1220',
+    surface2: '#111a2c',
+    surface3: '#1c2a44',
+    border: '#21314d',
+    text: '#e6edf7',
+    textMuted: '#8ea4c5',
+    danger: '#f87171',
+    lock: '#34d399'
+  },
+  graphite: {
+    bg: '#141414',
+    surface: '#1b1b1b',
+    surface2: '#242424',
+    surface3: '#313131',
+    border: '#3b3b3b',
+    text: '#f1f1f1',
+    textMuted: '#a3a3a3',
+    danger: '#f87171',
+    lock: '#4ade80'
+  },
+  light: {
+    bg: '#f6f8fc',
+    surface: '#ffffff',
+    surface2: '#eef2f7',
+    surface3: '#d8e0ea',
+    border: '#c8d2df',
+    text: '#1e293b',
+    textMuted: '#64748b',
+    danger: '#dc2626',
+    lock: '#16a34a'
+  }
+};
+
 // ─── Init ──────────────────────────────────────────────────────────────────
 async function init() {
   config = await api.config.get();
+  applyAppearance();
   bindWindowControls();
   bindNavButtons();
   bindTabBar();
@@ -38,6 +86,46 @@ async function init() {
   setTimeout(syncChromeHeight, 200);
   // Open the first tab
   await createTab(config.homepage || 'void://newtab');
+}
+
+function hexToRgb(hex) {
+  const safe = String(hex || '').trim();
+  const m = safe.match(/^#([\da-f]{6}|[\da-f]{3})$/i);
+  if (!m) return null;
+  let v = m[1];
+  if (v.length === 3) {
+    v = v.split('').map(ch => ch + ch).join('');
+  }
+  const n = parseInt(v, 16);
+  return {
+    r: (n >> 16) & 255,
+    g: (n >> 8) & 255,
+    b: n & 255
+  };
+}
+
+function applyAppearance() {
+  const themeId = config.browser_theme || 'dark';
+  const theme = THEMES[themeId] || THEMES.dark;
+  const root = document.documentElement;
+
+  root.style.setProperty('--bg', theme.bg);
+  root.style.setProperty('--surface', theme.surface);
+  root.style.setProperty('--surface2', theme.surface2);
+  root.style.setProperty('--surface3', theme.surface3);
+  root.style.setProperty('--border', theme.border);
+  root.style.setProperty('--text', theme.text);
+  root.style.setProperty('--text-muted', theme.textMuted);
+  root.style.setProperty('--danger', theme.danger);
+  root.style.setProperty('--lock-color', theme.lock);
+
+  const accent = config.accent_color || '#0ea5e9';
+  const rgb = hexToRgb(accent);
+  root.style.setProperty('--accent', accent);
+  if (rgb) {
+    root.style.setProperty('--accent-glow', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)`);
+    root.style.setProperty('--accent-glow2', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.22)`);
+  }
 }
 
 function syncChromeHeight() {
@@ -715,6 +803,13 @@ function registerIPCListeners() {
 
   api.on('open-new-tab', ({ url }) => {
     createTab(url);
+  });
+
+  api.on('config-updated', (updates) => {
+    if (!updates || typeof updates !== 'object') return;
+    config = { ...config, ...updates };
+    applyAppearance();
+    renderTabs();
   });
 }
 

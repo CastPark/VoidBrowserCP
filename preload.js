@@ -188,6 +188,7 @@ contextBridge.exposeInMainWorld('voidAPI', {
     const allowed = [
       'tab-updated', 'tab-loading', 'tab-title-updated', 'tab-favicon-updated',
       'nav-state-update', 'block-count-update', 'download-update', 'update-status',
+      'config-updated',
       'open-new-tab'
     ];
     if (allowed.includes(channel)) {

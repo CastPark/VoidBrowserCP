@@ -83,8 +83,8 @@ button:focus-visible {
   align-items: center;
   gap: 6px;
   min-width: 0;
-  flex: 0 1 auto;
-  max-width: calc(100% - 150px);
+  flex: 1 1 auto;
+  max-width: none;
   -webkit-app-region: no-drag;
 }
 
@@ -123,13 +123,14 @@ button:focus-visible {
 #tabs-container {
   display: flex;
   align-items: center;
-  flex: 0 1 auto;
-  gap: 3px;
+  flex: 1 1 auto;
+  width: 100%;
+  gap: 4px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
   min-width: 0;
-  max-width: min(70vw, calc(100vw - 250px));
+  max-width: none;
 }
 
 #tabs-container::-webkit-scrollbar { display: none; }
@@ -141,8 +142,8 @@ button:focus-visible {
   gap: 6px;
   padding: 0 10px;
   height: 30px;
-  min-width: 88px;
-  max-width: 190px;
+  min-width: 124px;
+  max-width: 220px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -150,7 +151,7 @@ button:focus-visible {
   cursor: pointer;
   position: relative;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
-  flex-shrink: 0;
+  flex: 1 1 0;
   overflow: hidden;
   /* Enable drag reorder */
   -webkit-app-region: no-drag;
@@ -330,7 +331,7 @@ button:focus-visible {
 }
 
 #lock-icon {
-  color: #22c55e;
+  color: var(--lock-color, #22c55e);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -364,6 +365,8 @@ button:focus-visible {
   align-items: center;
   gap: 4px;
   position: relative;
+  z-index: 200;
+}
 
 #btn-extensions,
 #extensions-popover,
@@ -373,8 +376,6 @@ button:focus-visible {
 
 #adblock-badge {
   pointer-events: none;
-}
-  z-index: 200;
 }
 
 .toolbar-btn {

@@ -94,6 +94,7 @@ function getDefaultConfig() {
     download_path: app.getPath('downloads'),
     ai_enabled: false,
     ai_model: 'llama3',
+    browser_theme: 'dark',
     accent_color: '#0ea5e9',
     newtab_background_preset: 'aurora',
     newtab_background_image: '',
@@ -470,6 +471,22 @@ function createMainWindow() {
   });
 }
 
+function broadcastConfigUpdated(updates) {
+  if (!updates || typeof updates !== 'object') return;
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('config-updated', updates);
+  }
+
+  for (const [, view] of tabViews) {
+    try {
+      if (view && view.webContents && !view.webContents.isDestroyed()) {
+        view.webContents.send('config-updated', updates);
+      }
+    } catch (_) {}
+  }
+}
+
 // ─── Cookie Cleanup ───────────────────────────────────────────────────────────
 async function clearCookiesOnExit() {
   try {
@@ -750,6 +767,7 @@ ipcMain.handle('set-config', (event, updates) => {
   ) {
     setupAutoUpdater();
   }
+  broadcastConfigUpdated(safeUpdates);
   return { success: true };
 });
 

@@ -491,6 +491,20 @@
       <div class="settings-group-label">Appearance</div>
       <div class="settings-row">
         <div class="settings-row-info">
+          <div class="settings-row-label">Browser theme</div>
+          <div class="settings-row-desc">Select a Google-like visual style for tabs and toolbar</div>
+        </div>
+        <div class="select-wrap">
+          <select id="browser-theme-select">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="midnight">Midnight</option>
+            <option value="graphite">Graphite</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
           <div class="settings-row-label">Accent color</div>
           <div class="settings-row-desc">Primary highlight color used throughout the UI</div>
         </div>
@@ -522,13 +536,6 @@
 
     <div class="settings-group">
       <div class="settings-group-label">Coming soon</div>
-      <div class="settings-row">
-        <div class="settings-row-info">
-          <div class="settings-row-label">Light theme</div>
-          <div class="settings-row-desc">A clean light mode for bright environments</div>
-        </div>
-        <button class="btn btn-secondary" disabled style="opacity:0.4;cursor:not-allowed">Soon</button>
-      </div>
       <div class="settings-row">
         <div class="settings-row-info">
           <div class="settings-row-label">Custom CSS</div>
@@ -637,6 +644,62 @@
 
 const api = window.voidAPI;
 let cfg = {};
+
+const THEMES = {
+  dark: {
+    bg: '#0d0d0d',
+    surface: '#141414',
+    surface2: '#1a1a1a',
+    surface3: '#1e293b',
+    border: '#1e293b',
+    text: '#e2e8f0',
+    muted: '#64748b',
+    danger: '#ef4444'
+  },
+  midnight: {
+    bg: '#05070d',
+    surface: '#0b1220',
+    surface2: '#111a2c',
+    surface3: '#1c2a44',
+    border: '#21314d',
+    text: '#e6edf7',
+    muted: '#8ea4c5',
+    danger: '#f87171'
+  },
+  graphite: {
+    bg: '#141414',
+    surface: '#1b1b1b',
+    surface2: '#242424',
+    surface3: '#313131',
+    border: '#3b3b3b',
+    text: '#f1f1f1',
+    muted: '#a3a3a3',
+    danger: '#f87171'
+  },
+  light: {
+    bg: '#f6f8fc',
+    surface: '#ffffff',
+    surface2: '#eef2f7',
+    surface3: '#d8e0ea',
+    border: '#c8d2df',
+    text: '#1e293b',
+    muted: '#64748b',
+    danger: '#dc2626'
+  }
+};
+
+function applySettingsTheme(themeId) {
+  const t = THEMES[themeId] || THEMES.dark;
+  const root = document.documentElement;
+  root.style.setProperty('--bg', t.bg);
+  root.style.setProperty('--surface', t.surface);
+  root.style.setProperty('--surface2', t.surface2);
+  root.style.setProperty('--surface3', t.surface3);
+  root.style.setProperty('--border', t.border);
+  root.style.setProperty('--text', t.text);
+  root.style.setProperty('--muted', t.muted);
+  root.style.setProperty('--danger', t.danger);
+}
 
 // ── Navigation ────────────────────────────────────────────────────────────
 const navItems = document.querySelectorAll('.nav-item');
@@ -785,10 +848,20 @@ function populateGeneral() {
 
 // ── Design ────────────────────────────────────────────────────────────────
 function populateDesign() {
+  const browserThemeSelect = document.getElementById('browser-theme-select');
   const picker = document.getElementById('accent-color-picker');
   const backgroundSelect = document.getElementById('newtab-background-select');
   const backgroundRow = document.getElementById('newtab-background-image-row');
   const backgroundImageInput = document.getElementById('newtab-background-image-input');
+
+  browserThemeSelect.value = cfg.browser_theme || 'dark';
+  applySettingsTheme(browserThemeSelect.value);
+
+  browserThemeSelect.addEventListener('change', async () => {
+    cfg.browser_theme = browserThemeSelect.value;
+    applySettingsTheme(cfg.browser_theme);
+    await api.config.set({ browser_theme: cfg.browser_theme });
+  });
 
   picker.value = cfg.accent_color || '#0ea5e9';
   picker.addEventListener('input', async () => {

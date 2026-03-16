@@ -6,6 +6,7 @@
   "download_path": "",
   "ai_enabled": false,
   "ai_model": "llama3",
+  "browser_theme": "dark",
   "accent_color": "#0ea5e9",
   "newtab_background_preset": "graphite",
   "newtab_background_image": "https://www.google.com/url?sa=t&source=web&rct=j&url=https%3A%2F%2Fwallpapercave.com%2Fhttyd-computer-wallpapers&ved=0CBYQjRxqFwoTCLCIkt-qopMDFQAAAAAdAAAAABAH&opi=89978449",
