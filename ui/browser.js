@@ -321,7 +321,7 @@ function updateAddressBar(url) {
   const siteFavicon = document.getElementById('site-favicon');
 
   if (document.activeElement !== bar) {
-    bar.value = url === 'void://newtab' ? '' : url;
+    bar.value = url.startsWith('void://newtab') ? '' : url;
   }
 
   // Show/hide lock icon
@@ -348,7 +348,7 @@ function restoreAddressBar() {
   const tab = getTab(activeTabId);
   const bar = document.getElementById('addressbar');
   if (tab) {
-    bar.value = tab.url === 'void://newtab' ? '' : tab.url;
+    bar.value = tab.url.startsWith('void://newtab') ? '' : tab.url;
   }
 }
 
@@ -423,6 +423,7 @@ function closeTab(tabId) {
 
 function renderTabs() {
   const container = document.getElementById('tabs-container');
+  const newTabBtn = document.getElementById('btn-new-tab');
   container.innerHTML = '';
 
   tabs.forEach(tab => {
@@ -501,6 +502,9 @@ function renderTabs() {
 
     container.appendChild(el);
   });
+
+  // Keep the new-tab button at the end
+  if (newTabBtn) container.appendChild(newTabBtn);
 }
 
 function makeFaviconPlaceholder() {

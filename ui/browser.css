@@ -133,6 +133,12 @@ button:focus-visible {
   max-width: none;
 }
 
+/* Keep new-tab button at the end, outside the scroll overflow */
+#tabs-container #btn-new-tab {
+  order: 9999;
+  flex-shrink: 0;
+}
+
 #tabs-container::-webkit-scrollbar { display: none; }
 
 /* Individual Tab */
