@@ -364,6 +364,16 @@ button:focus-visible {
   align-items: center;
   gap: 4px;
   position: relative;
+
+#btn-extensions,
+#extensions-popover,
+#adblock-popover {
+  display: none !important;
+}
+
+#adblock-badge {
+  pointer-events: none;
+}
   z-index: 200;
 }
 

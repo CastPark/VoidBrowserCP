@@ -133,7 +133,7 @@ body[data-background-preset="minimal"] {
   border-radius: 999px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0;
   padding: 0 14px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -144,11 +144,6 @@ body[data-background-preset="minimal"] {
 #search-bar:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
-}
-
-#search-icon {
-  color: var(--muted);
-  flex-shrink: 0;
 }
 
 #search-input {

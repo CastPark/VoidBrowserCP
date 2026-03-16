@@ -52,24 +52,9 @@ function syncChromeHeight() {
 }
 
 function applyChromeInsetForMenus() {
-  // Measure actual popover extent so the BrowserView shifts by exactly the right amount.
-  // Deferred one frame so the DOM has been laid out after toggling 'hidden'.
-  requestAnimationFrame(() => {
-    let target = baseChromeHeight;
-    if (isAdblockMenuOpen) {
-      const p = document.getElementById('adblock-popover');
-      if (p && !p.classList.contains('hidden')) {
-        target = Math.max(target, Math.ceil(p.getBoundingClientRect().bottom) + 6);
-      }
-    }
-    if (isExtensionsMenuOpen) {
-      const p = document.getElementById('extensions-popover');
-      if (p && !p.classList.contains('hidden')) {
-        target = Math.max(target, Math.ceil(p.getBoundingClientRect().bottom) + 6);
-      }
-    }
-    api.ui.setToolbarHeight(target);
-  });
+  // Keep web content fixed directly under titlebar+toolbar.
+  // Overlay menus should not push the BrowserView down.
+  api.ui.setToolbarHeight(baseChromeHeight);
 }
 
 function closeOverlayMenus() {

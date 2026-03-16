@@ -14,6 +14,22 @@ const Extensions = require('./src/extensions');
 const Downloads = require('./src/downloads');
 const AI = require('./src/ai');
 
+// Ensure profile/cache paths are always writable (important for portable/dev runs).
+const USER_DATA_DIR = path.join(app.getPath('appData'), 'VoidBrowser');
+const SESSION_DATA_DIR = path.join(USER_DATA_DIR, 'SessionData');
+try {
+  fs.mkdirSync(USER_DATA_DIR, { recursive: true });
+  fs.mkdirSync(SESSION_DATA_DIR, { recursive: true });
+} catch (_) {}
+app.setPath('userData', USER_DATA_DIR);
+app.setPath('sessionData', SESSION_DATA_DIR);
+
+// Favor GPU acceleration and avoid background throttling penalties.
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+
 // ─── Register void:// as a standard privileged scheme BEFORE app.ready ───────
 // This must happen synchronously before app.whenReady() is called.
 protocol.registerSchemesAsPrivileged([
@@ -493,7 +509,7 @@ function createBrowserView(tabId, url) {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
       sandbox: false,
-      spellcheck: true,
+      spellcheck: false,
       // Required for YouTube/Twitch/Streaming sites
       allowRunningInsecureContent: false,
       webSecurity: true,
@@ -502,6 +518,7 @@ function createBrowserView(tabId, url) {
   });
 
   view.setBackgroundColor('#0d0d0d');
+  view.webContents.setBackgroundThrottling(false);
   tabViews.set(tabId, view);
   webContentsToTabId.set(view.webContents.id, tabId);
   tabBlockCounts.set(tabId, 0);

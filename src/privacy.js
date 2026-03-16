@@ -25,11 +25,22 @@ class Privacy {
     this.config = config;
     // Pick one UA per session (not per request – more realistic)
     this.sessionUA = this._pickUA();
+    this.sessionLanguage = this._pickLanguage();
   }
 
   _pickUA() {
     const idx = Math.floor(Math.random() * USER_AGENTS.length);
     return USER_AGENTS[idx];
+  }
+
+  _pickLanguage() {
+    const langs = [
+      'en-US,en;q=0.9',
+      'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+      'en-GB,en;q=0.9'
+    ];
+    const idx = Math.floor(Math.random() * langs.length);
+    return langs[idx];
   }
 
   /**
@@ -41,12 +52,25 @@ class Privacy {
     sess.webRequest.onBeforeSendHeaders((details, callback) => {
       const headers = { ...details.requestHeaders };
       headers['User-Agent'] = this.sessionUA;
+      headers['Accept-Language'] = this.sessionLanguage;
       // Remove telemetry-related headers
       delete headers['x-client-data'];
       delete headers['X-Client-Data'];
+      delete headers['sec-ch-ua'];
+      delete headers['Sec-CH-UA'];
+      delete headers['sec-ch-ua-mobile'];
+      delete headers['Sec-CH-UA-Mobile'];
+      delete headers['sec-ch-ua-platform'];
+      delete headers['Sec-CH-UA-Platform'];
+      delete headers['sec-ch-ua-platform-version'];
+      delete headers['Sec-CH-UA-Platform-Version'];
+      delete headers['sec-ch-ua-full-version'];
+      delete headers['Sec-CH-UA-Full-Version'];
+      headers['DNT'] = '1';
       callback({ requestHeaders: headers });
     });
     console.log('[Privacy] User-Agent set to:', this.sessionUA);
+    console.log('[Privacy] Accept-Language set to:', this.sessionLanguage);
   }
 
   getSessionUA() {
