@@ -11,10 +11,10 @@
 }
 
 :root {
-  --bg:           #0d0d0d;
-  --surface:      #141414;
-  --surface2:     #1a1a1a;
-  --surface3:     #1e293b;
+  --bg:           #080808;
+  --surface:      #080808;
+  --surface2:     #111111;
+  --surface3:     #1b1b1b;
   --border:       #1e293b;
   --text:         #e2e8f0;
   --text-muted:   #64748b;
@@ -148,8 +148,9 @@ button:focus-visible {
   gap: 6px;
   padding: 0 10px;
   height: 30px;
-  min-width: 124px;
-  max-width: 220px;
+  min-width: 190px;
+  width: 190px;
+  max-width: 190px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -157,7 +158,7 @@ button:focus-visible {
   cursor: pointer;
   position: relative;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
-  flex: 1 1 0;
+  flex: 0 0 190px;
   overflow: hidden;
   /* Enable drag reorder */
   -webkit-app-region: no-drag;
@@ -268,7 +269,7 @@ button:focus-visible {
 /* ── Toolbar ───────────────────────────────────────────────────────── */
 #toolbar {
   height: var(--toolbar-h);
-  background: rgba(20, 20, 20, 0.92);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -830,3 +831,4 @@ button:focus-visible {
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 1px var(--accent);
 }
+

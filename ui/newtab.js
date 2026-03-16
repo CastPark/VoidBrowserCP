@@ -1,10 +1,10 @@
 'use strict';
 
 const ENGINES = [
-  { id: 'duckduckgo', name: 'DDG', label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=' },
-  { id: 'google', name: 'G', label: 'Google', url: 'https://www.google.com/search?q=' },
-  { id: 'bing', name: 'Bing', label: 'Bing', url: 'https://www.bing.com/search?q=' },
-  { id: 'brave', name: 'Brave', label: 'Brave Search', url: 'https://search.brave.com/search?q=' }
+  { id: 'duckduckgo', url: 'https://duckduckgo.com/?q=' },
+  { id: 'google', url: 'https://www.google.com/search?q=' },
+  { id: 'bing', url: 'https://www.bing.com/search?q=' },
+  { id: 'brave', url: 'https://search.brave.com/search?q=' }
 ];
 
 const WMO_CODES = {
@@ -47,7 +47,6 @@ async function init() {
   setupSearch();
   setupQuickLinks();
   applyBackgroundConfig();
-  setupCanvas();
   loadWeather();
 }
 
@@ -57,24 +56,31 @@ async function loadAppConfig() {
       return await window.voidAPI.config.get();
     }
   } catch (_) {}
-  return { search_engine: 'duckduckgo', newtab_background_preset: 'aurora', newtab_background_image: '' };
+  return { search_engine: 'duckduckgo', newtab_background_preset: 'minimal', newtab_background_image: '' };
 }
 
 function setupClock() {
   const clockEl = document.getElementById('clock');
   const dateEl = document.getElementById('date');
+  const greetingEl = document.getElementById('greeting');
 
   const tick = () => {
     const now = new Date();
     const hh = String(now.getHours()).padStart(2, '0');
     const mm = String(now.getMinutes()).padStart(2, '0');
     clockEl.textContent = `${hh}:${mm}`;
-    dateEl.textContent = now.toLocaleDateString('de-DE', {
+
+    const dateText = now.toLocaleDateString('en-US', {
       weekday: 'long',
-      year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
+    dateEl.textContent = dateText.toUpperCase();
+
+    const hour = now.getHours();
+    if (hour < 12) greetingEl.textContent = 'Good morning.';
+    else if (hour < 18) greetingEl.textContent = 'Good afternoon.';
+    else greetingEl.textContent = 'Good evening.';
   };
 
   tick();
@@ -109,21 +115,22 @@ function setupSearch() {
 }
 
 function applyBackgroundConfig() {
-  const preset = (appConfig && appConfig.newtab_background_preset) || 'aurora';
+  const preset = (appConfig && appConfig.newtab_background_preset) || 'minimal';
   const imageUrl = (appConfig && appConfig.newtab_background_image) || '';
   document.body.dataset.backgroundPreset = preset;
 
   if (preset === 'image' && imageUrl) {
-    document.body.style.backgroundImage = `linear-gradient(rgba(13,13,13,0.72), rgba(13,13,13,0.82)), url("${imageUrl.replace(/"/g, '%22')}")`;
+    document.body.style.backgroundImage = `linear-gradient(rgba(8,8,8,0.65), rgba(8,8,8,0.82)), url("${imageUrl.replace(/"/g, '%22')}")`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
     document.body.style.backgroundRepeat = 'no-repeat';
-  } else {
-    document.body.style.backgroundImage = '';
-    document.body.style.backgroundSize = '';
-    document.body.style.backgroundPosition = '';
-    document.body.style.backgroundRepeat = '';
+    return;
   }
+
+  document.body.style.backgroundImage = '';
+  document.body.style.backgroundSize = '';
+  document.body.style.backgroundPosition = '';
+  document.body.style.backgroundRepeat = '';
 }
 
 function setupQuickLinks() {
@@ -138,16 +145,10 @@ function setupQuickLinks() {
 
   addBtn.addEventListener('click', () => {
     form.classList.remove('hidden');
-    form.classList.remove('revealing');
-    // Reflow to restart animation class reliably
-    void form.offsetWidth;
-    form.classList.add('revealing');
     nameInput.focus();
   });
 
-  cancelBtn.addEventListener('click', () => {
-    hideQuickLinkForm();
-  });
+  cancelBtn.addEventListener('click', () => hideQuickLinkForm());
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -170,9 +171,7 @@ function setupQuickLinks() {
 }
 
 function hideQuickLinkForm() {
-  const form = document.getElementById('quicklink-form');
-  form.classList.add('hidden');
-  form.classList.remove('revealing');
+  document.getElementById('quicklink-form').classList.add('hidden');
 }
 
 function loadQuickLinks() {
@@ -192,7 +191,7 @@ function renderQuickLinks() {
   const grid = document.getElementById('quicklinks-grid');
   grid.innerHTML = '';
 
-  quickLinks.forEach((link, index) => {
+  quickLinks.slice(0, 5).forEach((link, index) => {
     const item = document.createElement('a');
     item.className = 'quicklink';
     item.href = link.url;
@@ -216,7 +215,7 @@ function renderQuickLinks() {
     const remove = document.createElement('button');
     remove.className = 'quicklink-remove';
     remove.type = 'button';
-    remove.textContent = '×';
+    remove.textContent = 'x';
     remove.title = 'Remove shortcut';
     remove.addEventListener('click', (e) => {
       e.preventDefault();
@@ -235,13 +234,9 @@ function renderQuickLinks() {
 }
 
 async function loadWeather() {
-  const iconEl = document.getElementById('weather-icon');
-  const tempEl = document.getElementById('weather-temp');
-  const descEl = document.getElementById('weather-desc');
-  const locEl = document.getElementById('weather-location');
+  const lineEl = document.getElementById('weather-line');
 
   try {
-    // Primary method: browser geolocation (allowed in Electron via permission handler)
     let lat;
     let lon;
     let locationLabel = '';
@@ -250,9 +245,8 @@ async function loadWeather() {
     if (geo) {
       lat = geo.coords.latitude;
       lon = geo.coords.longitude;
-      locationLabel = 'Current location';
+      locationLabel = '';
     } else {
-      // Fallback A: IP-based location via ipapi
       const ipData = await getIpLocation().catch(() => null);
       if (ipData && typeof ipData.latitude === 'number' && typeof ipData.longitude === 'number') {
         lat = ipData.latitude;
@@ -260,7 +254,6 @@ async function loadWeather() {
         locationLabel = `${ipData.city || ''}${ipData.city && ipData.country_name ? ', ' : ''}${ipData.country_name || ''}`.trim();
       }
 
-      // Fallback B: alternate IP provider
       if (typeof lat !== 'number' || typeof lon !== 'number') {
         const alt = await getIpLocationAlt().catch(() => null);
         if (alt && typeof alt.latitude === 'number' && typeof alt.longitude === 'number') {
@@ -270,7 +263,6 @@ async function loadWeather() {
         }
       }
 
-      // Fallback C: deterministic default coordinates (Berlin)
       if (typeof lat !== 'number' || typeof lon !== 'number') {
         lat = 52.52;
         lon = 13.405;
@@ -278,23 +270,19 @@ async function loadWeather() {
       }
     }
 
-    if (typeof lat !== 'number' || typeof lon !== 'number') {
-      throw new Error('Missing coordinates');
-    }
-
     const weather = await fetchWeather(lat, lon);
     const code = weather.weathercode;
-    const [desc, short] = WMO_CODES[code] || ['Unknown', 'Unknown'];
+    const [desc] = WMO_CODES[code] || ['Unknown'];
+    const temp = `${Math.round(weather.temperature)}C`;
+    const icon = weatherEmoji(code);
 
-    iconEl.textContent = weatherEmoji(code);
-    tempEl.textContent = `${Math.round(weather.temperature)}°C`;
-    descEl.textContent = desc;
-    locEl.textContent = locationLabel || short;
-  } catch (err) {
-    iconEl.textContent = '•';
-    tempEl.textContent = '--';
-    descEl.textContent = 'Weather unavailable';
-    locEl.textContent = 'Check network/geolocation permissions';
+    const parts = [];
+    if (locationLabel) parts.push(locationLabel);
+    parts.push(`${icon} ${desc}`);
+    parts.push(temp);
+    lineEl.textContent = parts.join(' | ');
+  } catch (_) {
+    lineEl.textContent = 'Weather unavailable';
   }
 }
 
@@ -314,104 +302,36 @@ function getBrowserGeolocation() {
 
 async function getIpLocation() {
   const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
-  if (!res.ok) {
-    throw new Error(`IP geolocation failed: HTTP ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`IP geolocation failed: HTTP ${res.status}`);
   return res.json();
 }
 
 async function getIpLocationAlt() {
   const res = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(5000) });
-  if (!res.ok) {
-    throw new Error(`Alt IP geolocation failed: HTTP ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`Alt IP geolocation failed: HTTP ${res.status}`);
   const data = await res.json();
-  if (!data.success) {
-    throw new Error('Alt IP geolocation provider returned failure');
-  }
+  if (!data.success) throw new Error('Alt IP geolocation provider returned failure');
   return data;
 }
 
 async function fetchWeather(latitude, longitude) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&temperature_unit=celsius`;
   const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (!res.ok) {
-    throw new Error(`Weather API failed: HTTP ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`Weather API failed: HTTP ${res.status}`);
   const data = await res.json();
-  if (!data.current_weather) {
-    throw new Error('Weather data missing');
-  }
+  if (!data.current_weather) throw new Error('Weather data missing');
   return data.current_weather;
 }
 
 function weatherEmoji(code) {
-  if (code === 0) return '☀';
-  if (code <= 3) return '☁';
-  if (code >= 45 && code <= 48) return '🌫';
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '🌧';
-  if (code >= 71 && code <= 77) return '❄';
-  if (code >= 95) return '⛈';
-  return '🌤';
-}
-
-function setupCanvas() {
-  const canvas = document.getElementById('bg-canvas');
-  const ctx = canvas.getContext('2d');
-  let width = 0;
-  let height = 0;
-  let t = 0;
-
-  const resize = () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  };
-
-  const draw = () => {
-    t += 0.0028;
-    ctx.clearRect(0, 0, width, height);
-
-    const preset = document.body.dataset.backgroundPreset || 'aurora';
-    const palette = getBackgroundPalette(preset);
-
-    const x1 = width * (0.3 + 0.09 * Math.sin(t));
-    const y1 = height * (0.35 + 0.07 * Math.cos(t * 0.8));
-    const g1 = ctx.createRadialGradient(x1, y1, 0, x1, y1, width * 0.5);
-    g1.addColorStop(0, palette.primary);
-    g1.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g1;
-    ctx.fillRect(0, 0, width, height);
-
-    const x2 = width * (0.75 + 0.06 * Math.cos(t * 0.7));
-    const y2 = height * (0.62 + 0.05 * Math.sin(t));
-    const g2 = ctx.createRadialGradient(x2, y2, 0, x2, y2, width * 0.45);
-    g2.addColorStop(0, palette.secondary);
-    g2.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g2;
-    ctx.fillRect(0, 0, width, height);
-
-    requestAnimationFrame(draw);
-  };
-
-  resize();
-  window.addEventListener('resize', resize);
-  requestAnimationFrame(draw);
-}
-
-function getBackgroundPalette(preset) {
-  switch (preset) {
-    case 'graphite':
-      return { primary: 'rgba(148,163,184,0.07)', secondary: 'rgba(71,85,105,0.08)' };
-    case 'midnight':
-      return { primary: 'rgba(37,99,235,0.08)', secondary: 'rgba(15,23,42,0.22)' };
-    case 'minimal':
-      return { primary: 'rgba(255,255,255,0.018)', secondary: 'rgba(255,255,255,0.01)' };
-    case 'image':
-      return { primary: 'rgba(14,165,233,0.03)', secondary: 'rgba(6,182,212,0.02)' };
-    case 'aurora':
-    default:
-      return { primary: 'rgba(14,165,233,0.07)', secondary: 'rgba(6,182,212,0.06)' };
-  }
+  if (code === 0) return 'Clear';
+  if (code <= 3) return 'Cloudy';
+  if (code >= 45 && code <= 48) return 'Fog';
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'Rain';
+  if (code >= 71 && code <= 77) return 'Snow';
+  if (code >= 95) return 'Storm';
+  return 'Fair';
 }
 
 document.addEventListener('DOMContentLoaded', init);
+

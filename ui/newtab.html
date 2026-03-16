@@ -3,43 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.open-meteo.com https://ipapi.co https://ipwho.is; script-src 'self'; style-src 'self'; img-src 'self' data: https:;" />
-  <title>New Tab – VoidBrowser</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://api.open-meteo.com https://ipapi.co https://ipwho.is https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:;" />
+  <title>void://newtab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="newtab.css" />
 </head>
 <body>
-  <canvas id="bg-canvas"></canvas>
-
   <main id="container">
-    <section id="clock-section" aria-label="Clock">
+    <section id="clock-section" data-reveal="0" aria-label="Clock">
+      <div id="greeting">Good day.</div>
       <div id="clock">00:00</div>
-      <div id="date">Sunday, January 1</div>
+      <div id="date">MONDAY, JANUARY 1</div>
     </section>
 
-    <section id="weather-widget" aria-label="Weather" aria-live="polite">
-      <div id="weather-inner">
-        <span id="weather-icon">⋯</span>
-        <span id="weather-temp">--</span>
-        <span id="weather-desc">Loading weather...</span>
-      </div>
-      <div id="weather-location"></div>
+    <section id="weather-widget" data-reveal="1" aria-label="Weather" aria-live="polite">
+      <div id="weather-line">Berlin, DE | Overcast | 6C</div>
     </section>
 
-    <section id="search-section" aria-label="Search">
+    <section id="search-section" data-reveal="2" aria-label="Search">
       <form id="search-form" role="search">
         <div id="search-bar">
-          <input id="search-input" type="text" spellcheck="false" autocomplete="off" placeholder="Search or enter URL" aria-label="Search" />
+          <input id="search-input" type="text" spellcheck="false" autocomplete="off" placeholder="Search" aria-label="Search" />
         </div>
       </form>
     </section>
 
-    <section id="quicklinks-section" aria-label="Quick access">
+    <section id="quicklinks-section" data-reveal="3" aria-label="Quick access">
       <div id="quicklinks-grid" role="list"></div>
       <button id="btn-add-quicklink" title="Add shortcut" aria-label="Add shortcut">+ Add shortcut</button>
 
       <form id="quicklink-form" class="hidden" aria-label="Add shortcut form">
-        <input id="quicklink-name" type="text" placeholder="Name (e.g. GitHub)" />
-        <input id="quicklink-url" type="text" placeholder="URL (https://example.com)" />
+        <input id="quicklink-name" type="text" placeholder="Name" />
+        <input id="quicklink-url" type="text" placeholder="URL" />
         <div id="quicklink-form-actions">
           <button id="quicklink-cancel" type="button">Cancel</button>
           <button id="quicklink-save" type="submit">Save</button>
@@ -51,3 +48,4 @@
   <script src="newtab.js"></script>
 </body>
 </html>
+

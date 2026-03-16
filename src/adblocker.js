@@ -33,7 +33,12 @@ const COMPAT_ALLOWLIST = [
   'twitch.tv',
   'ttvnw.net',
   'jtvnw.net',
-  'amazonaws.com'
+  'amazonaws.com',
+  'github.com',
+  'api.github.com',
+  'githubusercontent.com',
+  'release-assets.githubusercontent.com',
+  'objects.githubusercontent.com'
 ];
 
 class Adblocker {
@@ -267,3 +272,6 @@ class Adblocker {
 }
 
 module.exports = Adblocker;
+
+
+

@@ -19,10 +19,10 @@ let isExtensionsMenuOpen = false;
 
 const THEMES = {
   dark: {
-    bg: '#0d0d0d',
-    surface: '#141414',
-    surface2: '#1a1a1a',
-    surface3: '#1e293b',
+    bg: '#080808',
+    surface: '#080808',
+    surface2: '#111111',
+    surface3: '#1b1b1b',
     border: '#1e293b',
     text: '#e2e8f0',
     textMuted: '#64748b',
@@ -365,7 +365,7 @@ async function createTab(url) {
 
   const tab = {
     id: tabId,
-    title: 'New Tab',
+    title: 'void://newtab',
     url: url || 'void://newtab',
     favicon: null,
     loading: false,
@@ -596,7 +596,7 @@ function bindCommandBar() {
     suggestEl.innerHTML = '';
     if (!val.trim()) {
       const defaults = [
-        { icon: '🏠', title: 'New Tab', sub: 'void://newtab', action: () => createTab('void://newtab') },
+        { icon: '🏠', title: 'void://newtab', sub: 'void://newtab', action: () => createTab('void://newtab') },
         { icon: '⚙️', title: 'Settings', sub: 'void://settings', action: () => navigateTo('void://settings') }
       ];
       defaults.forEach(d => suggestEl.appendChild(makeSuggestionEl(d.icon, d.title, d.sub, d.action)));
@@ -940,3 +940,4 @@ function formatSize(bytes) {
 
 // ─── Boot ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
+
