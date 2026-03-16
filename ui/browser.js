@@ -265,6 +265,9 @@ function bindExtensionsMenu() {
   const btn = document.getElementById('btn-extensions');
   const popover = document.getElementById('extensions-popover');
   const settingsBtn = document.getElementById('btn-extensions-settings');
+  const chromeStoreBtn = document.getElementById('btn-browse-chrome-store');
+  const firefoxStoreBtn = document.getElementById('btn-browse-firefox-store');
+  const edgeStoreBtn = document.getElementById('btn-browse-edge-store');
 
   btn.addEventListener('click', async (event) => {
     event.stopPropagation();
@@ -283,6 +286,21 @@ function bindExtensionsMenu() {
 
   popover.addEventListener('click', (event) => {
     event.stopPropagation();
+  });
+
+  chromeStoreBtn.addEventListener('click', () => {
+    closeOverlayMenus();
+    createTab('https://chromewebstore.google.com/');
+  });
+
+  firefoxStoreBtn.addEventListener('click', () => {
+    closeOverlayMenus();
+    createTab('https://addons.mozilla.org/firefox/');
+  });
+
+  edgeStoreBtn.addEventListener('click', () => {
+    closeOverlayMenus();
+    createTab('https://microsoftedge.microsoft.com/addons/');
   });
 
   settingsBtn.addEventListener('click', () => {
@@ -365,7 +383,7 @@ async function createTab(url) {
 
   const tab = {
     id: tabId,
-    title: 'void://newtab',
+    title: getSpecialPageLabel(url || 'void://newtab') || 'Loading',
     url: url || 'void://newtab',
     favicon: null,
     loading: false,
@@ -526,6 +544,20 @@ function getTab(id) {
   return tabs.find(t => t.id === id) || null;
 }
 
+function getSpecialPageLabel(url) {
+  const value = String(url || '');
+  if (value.startsWith('void://newtab')) return 'New Tab';
+  if (value.startsWith('void://settings')) return 'Settings';
+  return null;
+}
+
+function getDisplayTabTitle(title, url) {
+  const special = getSpecialPageLabel(url) || getSpecialPageLabel(title);
+  if (special) return special;
+  const trimmed = String(title || '').trim();
+  return trimmed || 'Loading…';
+}
+
 // ─── Command Bar ───────────────────────────────────────────────────────────
 function bindCommandBar() {
   const overlay  = document.getElementById('command-bar-overlay');
@@ -596,7 +628,7 @@ function bindCommandBar() {
     suggestEl.innerHTML = '';
     if (!val.trim()) {
       const defaults = [
-        { icon: '🏠', title: 'void://newtab', sub: 'void://newtab', action: () => createTab('void://newtab') },
+        { icon: '🏠', title: 'New Tab', sub: 'Start page', action: () => createTab('void://newtab') },
         { icon: '⚙️', title: 'Settings', sub: 'void://settings', action: () => navigateTo('void://settings') }
       ];
       defaults.forEach(d => suggestEl.appendChild(makeSuggestionEl(d.icon, d.title, d.sub, d.action)));
@@ -752,7 +784,7 @@ function registerIPCListeners() {
     const tab = getTab(tabId);
     if (!tab) return;
     tab.url = url;
-    tab.title = title || 'Loading…';
+    tab.title = getDisplayTabTitle(title, url);
     tab.loading = loading;
     renderTabs();
     if (activeTabId === tabId) {
@@ -774,7 +806,7 @@ function registerIPCListeners() {
 
   api.on('tab-title-updated', ({ tabId, title }) => {
     const tab = getTab(tabId);
-    if (tab) { tab.title = title; renderTabs(); }
+    if (tab) { tab.title = getDisplayTabTitle(title, tab.url); renderTabs(); }
   });
 
   api.on('tab-favicon-updated', ({ tabId, favicon }) => {

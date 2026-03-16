@@ -375,8 +375,6 @@ button:focus-visible {
   z-index: 200;
 }
 
-#btn-extensions,
-#extensions-popover,
 #adblock-popover {
   display: none !important;
 }
@@ -568,6 +566,10 @@ button:focus-visible {
   margin-top: 12px;
 }
 
+.popover-actions-grid {
+  flex-wrap: wrap;
+}
+
 .popover-btn {
   flex: 1;
   height: 30px;
@@ -580,6 +582,10 @@ button:focus-visible {
 .popover-btn:hover {
   background: var(--surface3);
   color: var(--accent);
+}
+
+.popover-btn-half {
+  flex: 1 1 calc(50% - 4px);
 }
 
 /* Extensions area */

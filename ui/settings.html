@@ -585,16 +585,10 @@
       <div class="settings-group-label">Cookies</div>
       <div class="settings-row">
         <div class="settings-row-info">
-          <div class="settings-row-label">Clear cookies on exit</div>
-          <div class="settings-row-desc">Cookies outside the whitelist are deleted when VoidBrowser closes</div>
+          <div class="settings-row-label">Keep cookies after restart</div>
+          <div class="settings-row-desc">Cookies and site data now stay saved when VoidBrowser closes and starts again</div>
         </div>
-        <span style="font-size:12px;color:#22c55e">Always on</span>
-      </div>
-
-      <div id="cookie-whitelist-tags"></div>
-      <div id="add-cookie-row">
-        <input type="text" id="add-cookie-input" placeholder="example.com" aria-label="Add domain to whitelist" />
-        <button class="btn btn-primary" id="btn-add-cookie">Add</button>
+        <span style="font-size:12px;color:#22c55e">Enabled</span>
       </div>
     </div>
 
@@ -621,7 +615,7 @@
       <div class="settings-group-label">Install</div>
       <div id="ext-drop-zone" role="button" tabindex="0" aria-label="Drop .crx file here to install">
         <div style="font-size:22px;margin-bottom:6px">📦</div>
-        <div>Drop a <strong>.crx</strong> or <strong>.zip</strong> extension here</div>
+        <div>Drop a <strong>.crx</strong>, <strong>.xpi</strong>, or <strong>.zip</strong> extension here</div>
         <div style="margin-top:4px;font-size:11px;opacity:0.6">or click to choose a file</div>
       </div>
       <div class="settings-row" style="justify-content:flex-end;padding:8px 18px 14px">
@@ -924,46 +918,6 @@ function populatePrivacy() {
     setTimeout(() => { btn.textContent = 'Update lists'; btn.disabled = false; }, 3000);
   });
 
-  // Cookie whitelist
-  renderCookieWhitelist();
-
-  const addCookieInput = document.getElementById('add-cookie-input');
-  document.getElementById('btn-add-cookie').addEventListener('click', async () => {
-    const domain = addCookieInput.value.trim().toLowerCase();
-    if (!domain) return;
-    if (!cfg.cookie_whitelist) cfg.cookie_whitelist = [];
-    if (!cfg.cookie_whitelist.includes(domain)) {
-      cfg.cookie_whitelist.push(domain);
-      await api.config.set({ cookie_whitelist: cfg.cookie_whitelist });
-      renderCookieWhitelist();
-    }
-    addCookieInput.value = '';
-  });
-
-  addCookieInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('btn-add-cookie').click();
-  });
-}
-
-function renderCookieWhitelist() {
-  const container = document.getElementById('cookie-whitelist-tags');
-  container.innerHTML = '';
-  const list = cfg.cookie_whitelist || [];
-  if (list.length === 0) {
-    container.innerHTML = '<span style="padding:14px 18px;font-size:12px;color:var(--muted)">No exceptions — all cookies cleared on exit</span>';
-    return;
-  }
-  list.forEach((domain, idx) => {
-    const tag = document.createElement('div');
-    tag.className = 'cookie-tag';
-    tag.innerHTML = `${escapeHtml(domain)}<button title="Remove" aria-label="Remove ${escapeHtml(domain)}">×</button>`;
-    tag.querySelector('button').addEventListener('click', async () => {
-      cfg.cookie_whitelist.splice(idx, 1);
-      await api.config.set({ cookie_whitelist: cfg.cookie_whitelist });
-      renderCookieWhitelist();
-    });
-    container.appendChild(tag);
-  });
 }
 
 // ── Extensions ────────────────────────────────────────────────────────────

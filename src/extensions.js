@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Extensions module – manages Chrome extension (.crx / .zip) installation,
+ * Extensions module – manages web extension (.crx / .xpi / .zip) installation,
  * listing, toggling, and removal. Extensions are stored in an "extensions/" folder.
  */
 
@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-// AdmZip is used to unpack .crx/.zip extension archives
+// AdmZip is used to unpack .crx/.xpi/.zip extension archives
 let AdmZip;
 try {
   AdmZip = require('adm-zip');
@@ -54,9 +54,9 @@ class Extensions {
   }
 
   /**
-   * Install a .crx or .zip extension from a file path.
+   * Install a .crx, .xpi, or .zip extension from a file path.
    * Unpacks it and reads manifest.json for metadata.
-   * @param {string} filePath - Path to .crx / .zip file
+   * @param {string} filePath - Path to .crx / .xpi / .zip file
    * @returns {{ id, name, version, description, enabled, iconUrl }}
    */
   async install(filePath) {
@@ -69,8 +69,8 @@ class Extensions {
     }
 
     const ext = path.extname(filePath).toLowerCase();
-    if (ext !== '.crx' && ext !== '.zip') {
-      throw new Error('Only .crx and .zip extension files are supported.');
+    if (ext !== '.crx' && ext !== '.xpi' && ext !== '.zip') {
+      throw new Error('Only .crx, .xpi, and .zip extension files are supported.');
     }
 
     let fileBuffer = fs.readFileSync(filePath);

@@ -47,7 +47,8 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+const CONFIG_PATH = path.join(USER_DATA_DIR, 'config.json');
+const LEGACY_CONFIG_PATH = path.join(__dirname, 'config.json');
 const FIXED_UPDATE_OWNER = 'CastPark';
 const FIXED_UPDATE_REPO = 'VoidBrowserCP';
 let config = {};
@@ -66,11 +67,18 @@ let autoUpdaterInitialized = false;
 
 function loadConfig() {
   try {
-    if (fs.existsSync(CONFIG_PATH)) {
+    const sourcePath = fs.existsSync(CONFIG_PATH)
+      ? CONFIG_PATH
+      : (fs.existsSync(LEGACY_CONFIG_PATH) ? LEGACY_CONFIG_PATH : null);
+
+    if (sourcePath) {
       config = {
         ...getDefaultConfig(),
-        ...JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
+        ...JSON.parse(fs.readFileSync(sourcePath, 'utf8'))
       };
+      if (sourcePath !== CONFIG_PATH) {
+        saveConfig();
+      }
     } else {
       config = getDefaultConfig();
       saveConfig();
@@ -441,10 +449,8 @@ function createMainWindow() {
   // Remove default menu
   mainWindow.setMenuBarVisibility(false);
 
-  // Handle window close: clear cookies except whitelist
-  mainWindow.on('close', async () => {
-    await clearCookiesOnExit();
-    // Destroy all BrowserViews
+  // Handle window close: destroy BrowserViews but keep session data intact.
+  mainWindow.on('close', () => {
     for (const [, view] of tabViews) {
       try { mainWindow.removeBrowserView(view); } catch (_) {}
     }
@@ -484,23 +490,6 @@ function broadcastConfigUpdated(updates) {
         view.webContents.send('config-updated', updates);
       }
     } catch (_) {}
-  }
-}
-
-// ─── Cookie Cleanup ───────────────────────────────────────────────────────────
-async function clearCookiesOnExit() {
-  try {
-    const whitelist = config.cookie_whitelist || [];
-    const cookies = await session.defaultSession.cookies.get({});
-    for (const cookie of cookies) {
-      const domain = cookie.domain.replace(/^\./, '');
-      if (!whitelist.some(w => domain.includes(w))) {
-        const url = `http${cookie.secure ? 's' : ''}://${domain}${cookie.path}`;
-        await session.defaultSession.cookies.remove(url, cookie.name).catch(() => {});
-      }
-    }
-  } catch (err) {
-    console.error('[Privacy] Cookie cleanup error:', err.message);
   }
 }
 
@@ -812,7 +801,7 @@ ipcMain.handle('open-extension-dialog', async () => {
   if (!mainWindow) return null;
   const result = await dialog.showOpenDialog(mainWindow, {
     title: 'Install Extension',
-    filters: [{ name: 'Chrome Extension', extensions: ['crx', 'zip'] }],
+    filters: [{ name: 'Web Extension', extensions: ['crx', 'xpi', 'zip'] }],
     properties: ['openFile']
   });
   if (result.canceled || result.filePaths.length === 0) return null;
